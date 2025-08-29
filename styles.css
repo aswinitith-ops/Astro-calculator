@@ -1,0 +1,223 @@
+body {
+  background: black;
+  height: 100vh;
+  min-height: 100vh;
+  margin: 0;
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+#canvas {
+  height: 100%;
+  width: 100%;
+  position: fixed;
+  top: 0;
+  left: 0;
+  opacity: 1;
+  background: transparent;
+  z-index: -1;
+}
+
+#text-overlay {
+  color: white;
+  font-family: 'Unifix SP', sans-serif;
+  font-size: clamp(30px, 8vw, 80px);
+  text-align: center;
+  width: 80%;
+  z-index: 10;
+  position: relative;
+  padding: 20px 0;
+}
+
+#enter {
+  position: relative;
+  padding: 15px 40px;
+  font-family: 'Unifix SP', sans-serif;
+  font-size: 20px;
+  color: white;
+  background-color: #333;
+  border: none;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+  z-index: 10;
+  margin-bottom: 20px;
+  transition: opacity 0.5s, transform 0.2s;
+}
+
+#enter:hover {
+  transform: scale(1.05);
+}
+
+#moon-scene {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 5;
+  transform: translateY(100%);
+  transition: transform 0.8s ease-out, left 0.3s ease;
+  background: transparent;
+  overflow: visible;
+}
+
+#moon-scene.visible {
+  transform: translateY(0);
+}
+
+#moon-scene.shifted {
+  left: 300px;
+}
+
+#threejs-container {
+  width: 100%;
+  height: 100%;
+  background: transparent;
+  z-index: 2;
+  position: relative;
+}
+
+#sidebar {
+  position: fixed;
+  top: 0;
+  left: -500px;
+  width: 500px;
+  height: 100%;
+  background-color: #1e1e1e;
+  color: #fff;
+  z-index: 1000;
+  transition: left 0.3s ease;
+  padding: 10px 0;
+  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.5);
+  overflow-y: auto;
+}
+
+#sidebar:not(.closed) {
+  left: 0;
+}
+
+#moon-button {
+  position: fixed;
+  top: 50%;
+  left: 0;
+  transform: translateY(-50%);
+  background: #666;
+  border: none;
+  padding: 10px 15px;
+  font-size: 18px;
+  color: white;
+  cursor: pointer;
+  z-index: 1102;
+  box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.5);
+  border-radius: 0 5px 5px 0;
+  transition: left 0.3s ease, background 0.3s;
+  width: 50px;
+  height: 50px;
+  display: block;
+}
+
+#moon-button.hidden {
+  display: none;
+}
+
+#moon-button:hover {
+  background: #888;
+}
+
+#close-button {
+  position: absolute;
+  top: 2px;
+  right: 10px;
+  background: none;
+  border: none;
+  color: white;
+  font-size: 11px;
+  cursor: pointer;
+  padding: 5px;
+}
+
+#close-button:hover {
+  color: #00b7eb;
+}
+
+.nav-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  padding: 10px;
+  justify-content: center;
+}
+
+.nav-button {
+  flex: 1 1 auto;
+  min-width: 60px;
+  padding: 10px;
+  background: #333;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-family: 'Unifix SP', sans-serif;
+  text-align: center;
+  transition: background 0.2s;
+}
+
+.nav-button:hover {
+  background: #444;
+}
+
+.nav-button.active {
+  background: #2a2a2a;
+  border: 2px solid #00b7eb;
+}
+
+.hidden {
+  display: none;
+}
+
+@font-face {
+  font-family: 'Unifix SP';
+  src: url('assets/fonts/UnifixSPDemo.otf') format('opentype');
+}
+
+@media (max-width: 768px) {
+  #text-overlay {
+    font-size: clamp(20px, 10vw, 50px);
+    width: 90%;
+  }
+  #enter {
+    font-size: 16px;
+    padding: 12px 30px;
+  }
+  #sidebar {
+    width: 100%;
+    left: -100%;
+  }
+  #sidebar:not(.closed) {
+    left: 0;
+  }
+  #moon-button {
+    left: 0;
+  }
+  #moon-scene.shifted {
+    left: 0;
+  }
+  .nav-button {
+    min-width: 50px;
+    font-size: 12px;
+    padding: 8px;
+    border-radius: 4px;
+  }
+}
+
+@media (min-width: 769px) {
+  #text-overlay {
+    font-size: clamp(30px, 6vw, 80px);
+  }
+}
