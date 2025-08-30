@@ -346,30 +346,64 @@ class DateCalculator {
     ];
   }
 
-  calculateSaros(date) {
-    const inputDate = new Date(date);
-    const inputDateStr = inputDate.toISOString().split('T')[0]; // Формат YYYY-MM-DD
-    const eclipse = this.eclipseTable.find(e => e.date === inputDateStr);
-    if (eclipse) {
-      return `${eclipse.type}, Сарос №${eclipse.saros}`;
+calculateSaros(date) {
+  // Парсинг даты для поддержки форматов DD.MM.YYYY и YYYY-MM-DD
+  const parseDate = (dateStr) => {
+    if (!dateStr) return null;
+    if (typeof dateStr === 'string' && dateStr.includes('.')) {
+      const [day, month, year] = dateStr.split('.');
+      return new Date(`${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`);
     }
-    const startDate = new Date('1900-01-01');
-    const diffMs = inputDate - startDate;
-    const diffDays = diffMs / (1000 * 60 * 60 * 24);
-    const sarosCycles = Math.floor(diffDays / this.config.sarosPeriod);
-    const sarosNumber = (sarosCycles % 150) + 1;
-    const sameSarosEclipses = this.eclipseTable.filter(e => e.saros === sarosNumber);
-    if (sameSarosEclipses.length === 0) {
-      const nextSaros = new Date(startDate.getTime() + (sarosCycles + 1) * this.config.sarosPeriod * 24 * 60 * 60 * 1000);
-      return `Затмения нет, ближайшее: ${nextSaros.toLocaleDateString('ru-RU')}, Сарос №${sarosNumber}`;
-    }
+    return new Date(dateStr);
+  };
+
+  const inputDate = parseDate(date);
+  if (!inputDate || isNaN(inputDate)) {
+    return 'Ошибка: введите полную дату';
+  }
+  const inputDateStr = inputDate.toISOString().split('T')[0]; // Формат YYYY-MM-DD
+
+  // Проверяем, есть ли затмение на введённую дату
+  const eclipse = this.eclipseTable.find(e => e.date === inputDateStr);
+  if (eclipse) {
+    return `${eclipse.type}, Сарос №${eclipse.saros}`;
+  }
+
+  // Вычисляем номер Сароса
+  const startDate = new Date('1900-01-01');
+  const diffMs = inputDate - startDate;
+  const diffDays = diffMs / (1000 * 60 * 60 * 24);
+  const sarosCycles = Math.floor(diffDays / this.config.sarosPeriod);
+  const sarosNumber = (sarosCycles % 223) + 1;
+
+  // Находим все затмения с этим номером Сароса
+  const sameSarosEclipses = this.eclipseTable.filter(e => e.saros === sarosNumber);
+  console.log(`Сарос №${sarosNumber}, Найденные затмения:`, sameSarosEclipses); // Отладка
+
+  if (sameSarosEclipses.length > 0) {
+    // Находим ближайшее затмение в цикле Сароса
     const closestEclipse = sameSarosEclipses.reduce((closest, current) => {
       const currentDiff = Math.abs(new Date(current.date) - inputDate);
       const closestDiff = Math.abs(new Date(closest.date) - inputDate);
       return currentDiff < closestDiff ? current : closest;
-    });
-    return `Затмения нет, ближайшее: ${new Date(closestEclipse.date).toLocaleDateString('ru-RU')}, ${closestEclipse.type}, Сарос №${sarosNumber}`;
+    }, sameSarosEclipses[0]);
+
+    const closestDate = new Date(closestEclipse.date);
+    const isFuture = closestDate > inputDate;
+    return `Затмения нет, ближайшее: ${closestDate.toLocaleDateString('ru-RU')}, ${closestEclipse.type}, Сарос №${sarosNumber}${isFuture ? ' (в будущем)' : ' (в прошлом)'}`;
   }
+
+  // Если затмений с этим Саросом нет, ищем ближайшее среди всех затмений
+  const closestEclipse = this.eclipseTable.reduce((closest, current) => {
+    const currentDiff = Math.abs(new Date(current.date) - inputDate);
+    const closestDiff = Math.abs(new Date(closest.date) - inputDate);
+    return currentDiff < closestDiff ? current : closest;
+  }, this.eclipseTable[0]);
+
+  const closestDate = new Date(closestEclipse.date);
+  const isFuture = closestDate > inputDate;
+  return `Затмения нет, ближайшее: ${closestDate.toLocaleDateString('ru-RU')}, ${closestEclipse.type}, Сарос №${closestEclipse.saros}${isFuture ? ' (в будущем)' : ' (в прошлом)'}`;
+}
 
   calculatePhase(date) {
     const startDate = new Date('1923-01-01');

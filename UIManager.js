@@ -33,128 +33,156 @@ class UIManager {
     return this;
   }
 
-  renderButtons() {
-    const navContainer = document.createElement('div');
-    navContainer.className = 'nav-container';
-    
-    const buttonContainer = document.createElement('div');
-    buttonContainer.style.display = 'flex';
-    buttonContainer.style.flexWrap = 'wrap';
-    buttonContainer.style.gap = '5px';
-    buttonContainer.style.padding = '10px';
-    buttonContainer.style.justifyContent = 'center';
+renderButtons() {
+  const navContainer = document.createElement('div');
+  navContainer.className = 'nav-container';
 
-    const calcContainers = {};
-    this.scene.config.buttons.forEach((button, index) => {
-      const btn = document.createElement('button');
-      btn.className = 'nav-button';
-      btn.textContent = button.text;
-      btn.dataset.action = button.action;
-      if (index === 0) btn.classList.add('active');
-      buttonContainer.appendChild(btn);
+  const buttonContainer = document.createElement('div');
+  buttonContainer.style.display = 'flex';
+  buttonContainer.style.flexWrap = 'wrap';
+  buttonContainer.style.gap = '5px';
+  buttonContainer.style.padding = '10px';
+  buttonContainer.style.justifyContent = 'center';
 
-      const calcContainer = document.createElement('div');
-      calcContainer.className = `calc-container calc-${button.action}`;
-      calcContainer.style.display = index === 0 ? 'block' : 'none';
-      calcContainer.style.padding = '10px';
-      calcContainer.style.background = '#2a2a2a';
-      calcContainer.style.borderRadius = '6px';
-      calcContainer.style.margin = '10px';
-      calcContainer.style.color = 'white';
-      calcContainer.style.fontFamily = '"Roboto", sans-serif';
-      calcContainer.style.fontSize = '14px';
+  const calcContainers = {};
+  this.scene.config.buttons.forEach((button, index) => {
+    const btn = document.createElement('button');
+    btn.className = 'nav-button';
+    btn.textContent = button.text;
+    btn.dataset.action = button.action;
+    if (index === 0) btn.classList.add('active');
+    buttonContainer.appendChild(btn);
 
-      const inputContainer = document.createElement('div');
-      inputContainer.style.marginBottom = '10px';
+    const calcContainer = document.createElement('div');
+    calcContainer.className = `calc-container calc-${button.action}`;
+    calcContainer.style.display = index === 0 ? 'block' : 'none';
+    calcContainer.style.padding = '10px';
+    calcContainer.style.background = '#2a2a2a';
+    calcContainer.style.borderRadius = '6px';
+    calcContainer.style.margin = '10px';
+    calcContainer.style.color = 'white';
+    calcContainer.style.fontFamily = '"Roboto", sans-serif';
+    calcContainer.style.fontSize = '14px';
 
-      const needsTwoDates = ['calculator', 'synodic', 'perigee'].includes(button.action);
-      const inputs = [];
-      if (needsTwoDates) {
-        const date1Input = document.createElement('input');
-        date1Input.type = 'date';
-        date1Input.style.margin = '5px';
-        date1Input.style.padding = '5px';
-        date1Input.style.borderRadius = '4px';
-        date1Input.style.width = '150px';
-        date1Input.min = '0001-01-01';
-        date1Input.max = '3000-12-31';
-        date1Input.addEventListener('input', (e) => {
-          const year = parseInt(e.target.value.split('-')[0] || 0);
-          if (year > 3000 || year < 1) {
-            e.target.value = '3000-12-31';
-          }
-          this.updateResult(button.action, calcContainer);
-        });
-        inputContainer.appendChild(date1Input);
-        inputs.push(date1Input);
+    const inputContainer = document.createElement('div');
+    inputContainer.style.marginBottom = '10px';
 
-        const date2Input = document.createElement('input');
-        date2Input.type = 'date';
-        date2Input.style.margin = '5px';
-        date2Input.style.padding = '5px';
-        date2Input.style.borderRadius = '4px';
-        date2Input.style.width = '150px';
-        date2Input.min = '0001-01-01';
-        date2Input.max = '3000-12-31';
-        date2Input.addEventListener('input', (e) => {
-          const year = parseInt(e.target.value.split('-')[0] || 0);
-          if (year > 3000 || year < 1) {
-            e.target.value = '3000-12-31';
-          }
-          this.updateResult(button.action, calcContainer);
-        });
-        inputContainer.appendChild(date2Input);
-        inputs.push(date2Input);
-      } else {
-        const dateInput = document.createElement('input');
-        dateInput.type = 'date';
-        dateInput.style.margin = '5px';
-        dateInput.style.padding = '5px';
-        dateInput.style.borderRadius = '4px';
-        dateInput.style.width = '150px';
-        dateInput.min = '0001-01-01';
-        dateInput.max = '3000-12-31';
-        dateInput.addEventListener('input', (e) => {
-          const year = parseInt(e.target.value.split('-')[0] || 0);
-          if (year > 3000 || year < 1) {
-            e.target.value = '3000-12-31';
-          }
-          this.updateResult(button.action, calcContainer);
-        });
-        inputContainer.appendChild(dateInput);
-        inputs.push(dateInput);
+    const needsTwoDates = ['calculator', 'synodic', 'perigee'].includes(button.action);
+    const inputs = [];
+    if (needsTwoDates) {
+      const date1Input = document.createElement('input');
+      date1Input.type = 'date';
+      date1Input.style.margin = '5px';
+      date1Input.style.padding = '5px';
+      date1Input.style.borderRadius = '4px';
+      date1Input.style.width = '150px';
+      date1Input.min = '0001-01-01';
+      date1Input.max = '3000-12-31';
+      date1Input.addEventListener('input', () => {
+        this.updateResult(button.action, calcContainer);
+      });
+      inputContainer.appendChild(date1Input);
+      inputs.push(date1Input);
+
+      const date2Input = document.createElement('input');
+      date2Input.type = 'date';
+      date2Input.style.margin = '5px';
+      date2Input.style.padding = '5px';
+      date2Input.style.borderRadius = '4px';
+      date2Input.style.width = '150px';
+      date2Input.min = '0001-01-01';
+      date2Input.max = '3000-12-31';
+      date2Input.addEventListener('input', () => {
+        this.updateResult(button.action, calcContainer);
+      });
+      inputContainer.appendChild(date2Input);
+      inputs.push(date2Input);
+    } else {
+      const dateInput = document.createElement('input');
+      dateInput.type = 'date';
+      dateInput.style.margin = '5px';
+      dateInput.style.padding = '5px';
+      dateInput.style.borderRadius = '4px';
+      dateInput.style.width = '150px';
+      dateInput.min = '0001-01-01';
+      dateInput.max = '3000-12-31';
+      dateInput.addEventListener('input', () => {
+        this.updateResult(button.action, calcContainer);
+      });
+      inputContainer.appendChild(dateInput);
+      inputs.push(dateInput);
+    }
+
+    calcContainer.appendChild(inputContainer);
+
+    const resultDiv = document.createElement('div');
+    resultDiv.className = `result-${button.action}`;
+    resultDiv.style.whiteSpace = 'pre-line';
+    calcContainer.appendChild(resultDiv);
+
+    const descriptionDiv = document.createElement('div');
+    descriptionDiv.className = `description-${button.action}`;
+    descriptionDiv.style.marginTop = '10px';
+    descriptionDiv.style.fontSize = '12px';
+    descriptionDiv.style.opacity = '0.8';
+    descriptionDiv.textContent = this.getDescription(button.action);
+    calcContainer.appendChild(descriptionDiv);
+
+    calcContainers[button.action] = calcContainer;
+  });
+
+  navContainer.appendChild(buttonContainer);
+
+  const resultContainer = document.createElement('div');
+  resultContainer.className = 'result-container';
+  resultContainer.style.margin = '10px';
+  Object.values(calcContainers).forEach(container => {
+    resultContainer.appendChild(container);
+  });
+  navContainer.appendChild(resultContainer);
+
+  this.sidebar.insertBefore(navContainer, this.closeButton);
+}
+
+updateResult(action, calcContainer) {
+  const inputs = calcContainer.querySelectorAll('input[type="date"]');
+  const resultDiv = calcContainer.querySelector(`.result-${action}`);
+
+  if (inputs.length === 2) {
+    const [date1, date2] = inputs;
+    if (date1.value && date2.value) {
+      let result;
+      switch (action) {
+        case 'calculator':
+          result = this.calculator.calculatePeriod(date1.value, date2.value, 'sidereal');
+          break;
+        case 'synodic':
+          result = this.calculator.calculatePeriod(date1.value, date2.value, 'synodic');
+          break;
+        case 'perigee':
+          result = this.calculator.calculatePeriod(date1.value, date2.value, 'anomalistic');
+          break;
       }
-
-      calcContainer.appendChild(inputContainer);
-
-      const resultDiv = document.createElement('div');
-      resultDiv.className = `result-${button.action}`;
-      resultDiv.style.whiteSpace = 'pre-line';
-      calcContainer.appendChild(resultDiv);
-
-      const descriptionDiv = document.createElement('div');
-      descriptionDiv.className = `description-${button.action}`;
-      descriptionDiv.style.marginTop = '10px';
-      descriptionDiv.style.fontSize = '12px';
-      descriptionDiv.style.opacity = '0.8';
-      descriptionDiv.textContent = this.getDescription(button.action);
-      calcContainer.appendChild(descriptionDiv);
-
-      calcContainers[button.action] = calcContainer;
-    });
-
-    navContainer.appendChild(buttonContainer);
-
-    const resultContainer = document.createElement('div');
-    resultContainer.className = 'result-container';
-    resultContainer.style.margin = '10px';
-    Object.values(calcContainers).forEach(container => {
-      resultContainer.appendChild(container);
-    });
-    navContainer.appendChild(resultContainer);
-
-    this.sidebar.insertBefore(navContainer, this.closeButton);
+      resultDiv.innerHTML = result.map(line => `<div>${line}</div>`).join('');
+    } else {
+      resultDiv.innerHTML = '';
+    }
+  } else if (inputs.length === 1 && inputs[0].value) {
+    switch (action) {
+      case 'section3':
+        resultDiv.textContent = this.calculator.calculateSaros(inputs[0].value);
+        break;
+      case 'section5':
+        resultDiv.textContent = this.calculator.calculatePhase(inputs[0].value);
+        break;
+      case 'section6':
+        resultDiv.textContent = this.calculator.calculateLunarMonth(inputs[0].value);
+        break;
+    }
+  } else {
+    resultDiv.innerHTML = '';
   }
+}
 
   updateResult(action, calcContainer) {
     const inputs = calcContainer.querySelectorAll('input[type="date"]');
@@ -211,17 +239,17 @@ class UIManager {
   getDescription(action) {
     switch (action) {
       case 'calculator':
-        return 'Рассчитывает разницу между двумя датами в годах, месяцах, неделях и днях с учётом сидерического периода Луны (около 27.32 дней).';
+        return 'Рассчитывает разницу между двумя датами в годах, месяцах, неделях и днях с учётом сидерического периода Луны (около 27.32 дней). Сидерический период Луны - это время её движения по орбите, необходимое для полного оборота вокруг Земли относительно удалённых звёзд.';
       case 'synodic':
-        return 'Рассчитывает разницу между двумя датами в годах, месяцах, неделях и днях с учётом синодического периода Луны (около 29.53 дней).';
+        return 'Рассчитывает разницу между двумя датами в годах, месяцах, неделях и днях с учётом синодического периода Луны (около 29.53 дней). Синодический период Луны - это время, за которое Луна проходит полный цикл фаз, видимых с Земли. Он измеряется от одного новолуния до следующего и длится примерно 29,53 дня. В течении этого периода Луна поочерёдно проходит все свои фазы: от новолуния до новолуния. Именно этот цикл лежит в основе лунного календаря и привычного представления о "лунном месяце".';
       case 'section3':
-        return 'Определяет номер цикла Сарос для введённой даты и дату следующего затмения.';
+        return 'Сарос — цикл около 18 лет и 11 дней (6585,3 дня), включающий 223 синодических месяца, в течение которого солнечные и лунные затмения повторяются в схожей последовательности и географическом положении. В калькуляторе ввод даты позволяет определить номер цикла Сарос и найти ближайшее затмение, если на указанную дату затмение отсутствует.';
       case 'perigee':
-        return 'Рассчитывает разницу между двумя датами в годах, месяцах, неделях и днях с учётом аномалистического периода Луны (около 27.55 дней).';
+        return 'Рассчитывает разницу между двумя датами в годах, месяцах, неделях и днях с учётом аномалистического периода Луны (около 27.55 дней). Аномалистический период Луны - это время, за которое Луна совершает полный оборот вокруг Земли относительно точки перигея своей орбиты (то есть самой ближней к Земле точки). Он немного длиннее сидерического месяца и связан с тем, что лунная орбита не идеально круглая, а эллиптическая. Благодаря аномалистическому периоду можно учитывать изменения расстояния до Луны и повторяемость моментов, когда она находится ближе или дальше от Земли.)';
       case 'section5':
-        return 'Определяет текущую фазу Луны (например, новолуние, полнолуние) для введённой даты.';
+        return 'Фаза Луны — стадия видимого освещения Луны, зависящая от её положения относительно Земли и Солнца. Цикл длится около 29,53 дня (синодический месяц). В калькуляторе ввод даты позволяет определить текущую фазу Луны (новолуние, растущий серп, первая четверть, полнолуние и др.) на указанную дату.';
       case 'section6':
-        return 'Рассчитывает порядковый номер лунного месяца с начала 1923 года для введённой даты.';
+        return 'Brown Lunation Count - порядковый номер лунного месяца с отсчётом с начала 1923 года. Этот отсчёт был предложен астрономом Эрнестом Ульямом Брауном и используется в астрономических таблицах и эфемеридах. Точка отсчёта выбрана на явнарь 1923 года, когда начался "нулевой" лунный месяц по системе Брауна. Каждый последующий лунный месяц получает свой порядковый номер, что позволяет однозначно обозначать любое новолуние в календарных и астрономических расчётах.';
       default:
         return '';
     }
