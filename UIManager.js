@@ -68,6 +68,7 @@ class UIManager {
       inputContainer.style.marginBottom = '10px';
 
       const needsTwoDates = ['calculator', 'synodic', 'perigee'].includes(button.action);
+      const inputs = [];
       if (needsTwoDates) {
         const date1Input = document.createElement('input');
         date1Input.type = 'date';
@@ -75,7 +76,17 @@ class UIManager {
         date1Input.style.padding = '5px';
         date1Input.style.borderRadius = '4px';
         date1Input.style.width = '150px';
+        date1Input.min = '0001-01-01';
+        date1Input.max = '3000-12-31';
+        date1Input.addEventListener('input', (e) => {
+          const year = parseInt(e.target.value.split('-')[0] || 0);
+          if (year > 3000 || year < 1) {
+            e.target.value = '3000-12-31';
+          }
+          this.updateResult(button.action, calcContainer);
+        });
         inputContainer.appendChild(date1Input);
+        inputs.push(date1Input);
 
         const date2Input = document.createElement('input');
         date2Input.type = 'date';
@@ -83,7 +94,17 @@ class UIManager {
         date2Input.style.padding = '5px';
         date2Input.style.borderRadius = '4px';
         date2Input.style.width = '150px';
+        date2Input.min = '0001-01-01';
+        date2Input.max = '3000-12-31';
+        date2Input.addEventListener('input', (e) => {
+          const year = parseInt(e.target.value.split('-')[0] || 0);
+          if (year > 3000 || year < 1) {
+            e.target.value = '3000-12-31';
+          }
+          this.updateResult(button.action, calcContainer);
+        });
         inputContainer.appendChild(date2Input);
+        inputs.push(date2Input);
       } else {
         const dateInput = document.createElement('input');
         dateInput.type = 'date';
@@ -91,7 +112,17 @@ class UIManager {
         dateInput.style.padding = '5px';
         dateInput.style.borderRadius = '4px';
         dateInput.style.width = '150px';
+        dateInput.min = '0001-01-01';
+        dateInput.max = '3000-12-31';
+        dateInput.addEventListener('input', (e) => {
+          const year = parseInt(e.target.value.split('-')[0] || 0);
+          if (year > 3000 || year < 1) {
+            e.target.value = '3000-12-31';
+          }
+          this.updateResult(button.action, calcContainer);
+        });
         inputContainer.appendChild(dateInput);
+        inputs.push(dateInput);
       }
 
       calcContainer.appendChild(inputContainer);
@@ -125,6 +156,58 @@ class UIManager {
     this.sidebar.insertBefore(navContainer, this.closeButton);
   }
 
+  updateResult(action, calcContainer) {
+    const inputs = calcContainer.querySelectorAll('input[type="date"]');
+    const resultDiv = calcContainer.querySelector(`.result-${action}`);
+
+    if (inputs.length === 2) {
+      const [date1, date2] = inputs;
+      if (date1.value && date2.value) {
+        const year1 = parseInt(date1.value.split('-')[0] || 0);
+        const year2 = parseInt(date2.value.split('-')[0] || 0);
+        if (year1 > 3000 || year1 < 1) {
+          date1.value = '3000-12-31';
+        }
+        if (year2 > 3000 || year2 < 1) {
+          date2.value = '3000-12-31';
+        }
+        let result;
+        switch (action) {
+          case 'calculator':
+            result = this.calculator.calculatePeriod(date1.value, date2.value, 'sidereal');
+            break;
+          case 'synodic':
+            result = this.calculator.calculatePeriod(date1.value, date2.value, 'synodic');
+            break;
+          case 'perigee':
+            result = this.calculator.calculatePeriod(date1.value, date2.value, 'anomalistic');
+            break;
+        }
+        resultDiv.innerHTML = result.map(line => `<div>${line}</div>`).join('');
+      } else {
+        resultDiv.innerHTML = '';
+      }
+    } else if (inputs.length === 1 && inputs[0].value) {
+      const year = parseInt(inputs[0].value.split('-')[0] || 0);
+      if (year > 3000 || year < 1) {
+        inputs[0].value = '3000-12-31';
+      }
+      switch (action) {
+        case 'section3':
+          resultDiv.textContent = this.calculator.calculateSaros(inputs[0].value);
+          break;
+        case 'section5':
+          resultDiv.textContent = this.calculator.calculatePhase(inputs[0].value);
+          break;
+        case 'section6':
+          resultDiv.textContent = this.calculator.calculateLunarMonth(inputs[0].value);
+          break;
+      }
+    } else {
+      resultDiv.innerHTML = '';
+    }
+  }
+
   getDescription(action) {
     switch (action) {
       case 'calculator':
@@ -146,7 +229,7 @@ class UIManager {
 
   setupEventListeners() {
     this.moonButton.addEventListener('click', () => {
-      console.log('Клик по moon-button'); // Отладка
+      console.log('Клик по moon-button');
       const isOpen = !this.sidebar.classList.contains('closed');
       if (isOpen) {
         this.sidebar.classList.add('closed');
@@ -184,49 +267,7 @@ class UIManager {
         this.sidebar.querySelectorAll('.calc-container').forEach(container => container.style.display = 'none');
         const calcContainer = this.sidebar.querySelector(`.calc-${button.dataset.action}`);
         calcContainer.style.display = 'block';
-
-        const action = button.dataset.action;
-        const inputs = calcContainer.querySelectorAll('input[type="date"]');
-        const resultDiv = calcContainer.querySelector(`.result-${action}`);
-
-        const updateResult = () => {
-          if (inputs.length === 2) {
-            const [date1, date2] = inputs;
-            if (date1.value && date2.value) {
-              let result;
-              switch (action) {
-                case 'calculator':
-                  result = this.calculator.calculatePeriod(date1.value, date2.value, 'sidereal');
-                  break;
-                case 'synodic':
-                  result = this.calculator.calculatePeriod(date1.value, date2.value, 'synodic');
-                  break;
-                case 'perigee':
-                  result = this.calculator.calculatePeriod(date1.value, date2.value, 'anomalistic');
-                  break;
-              }
-              resultDiv.textContent = result.join('\n');
-            }
-          } else if (inputs.length === 1 && inputs[0].value) {
-            switch (action) {
-              case 'section3':
-                resultDiv.textContent = this.calculator.calculateSaros(inputs[0].value);
-                break;
-              case 'section5':
-                resultDiv.textContent = this.calculator.calculatePhase(inputs[0].value);
-                break;
-              case 'section6':
-                resultDiv.textContent = this.calculator.calculateLunarMonth(inputs[0].value);
-                break;
-            }
-          }
-        };
-
-        inputs.forEach(input => {
-          input.removeEventListener('change', updateResult);
-          input.addEventListener('change', updateResult);
-        });
-        updateResult();
+        this.updateResult(button.dataset.action, calcContainer);
       });
     });
   }
