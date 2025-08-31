@@ -313,41 +313,52 @@ class DateCalculator {
     ];
   }
 
- calculatePeriod(date1, date2, periodType) {
-    const diffMs = Math.abs(new Date(date2) - new Date(date1));
-    const diffDays = diffMs / (1000 * 60 * 60 * 24);
-    let period;
-    switch (periodType) {
-      case 'sidereal':
-        period = diffDays / this.config.siderealPeriod;
-        break;
-      case 'synodic':
-        period = diffDays / this.config.synodicPeriod;
-        break;
-      case 'anomalistic':
-        period = diffDays / this.config.anomalisticPeriod;
-        break;
-      default:
-        period = diffDays;
+calculatePeriod(date1, date2, periodType) {
+  const parseDate = (dateStr) => {
+    if (!dateStr) return null;
+    if (typeof dateStr === 'string' && dateStr.includes('.')) {
+      const [day, month, year] = dateStr.split('.');
+      return new Date(`${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`);
     }
-    return this.formatPeriod(period, periodType);
+    return new Date(dateStr);
+  };
+
+  const d1 = parseDate(date1);
+  const d2 = parseDate(date2);
+  if (!d1 || !d2 || isNaN(d1) || isNaN(d2)) {
+    return ['Ошибка: неверный формат даты'];
   }
 
-  formatPeriod(period, periodType) {
-    const years = Math.floor(period / 12);
-    const months = parseFloat((period % 12).toFixed(3));
-    const periodLength = periodType === 'sidereal' ? this.config.siderealPeriod :
-                        periodType === 'synodic' ? this.config.synodicPeriod :
-                        periodType === 'anomalistic' ? this.config.anomalisticPeriod : 1;
-    const weeks = parseFloat((period * periodLength / 7).toFixed(3));
-    const days = parseFloat((period * periodLength).toFixed(3));
-    return [
-      `${years} лет`,
-      `${months} месяцев`,
-      `${weeks} недель`,
-      `${days} дней`
-    ];
-  }
+  const diffMs = Math.abs(d2 - d1);
+  const diffDays = diffMs / (1000 * 60 * 60 * 24);
+
+  // выбираем длину месяца под период
+  const t = (periodType || '').toLowerCase().trim();
+  let periodLength =
+    t === 'sidereal'    ? this.config.siderealPeriod :
+    t === 'synodic'     ? this.config.synodicPeriod :
+    t === 'anomalistic' ? this.config.anomalisticPeriod :
+                          365.25 / 12; // "обычный" солнечный месяц
+
+  const months = diffDays / periodLength;
+
+  return this.formatPeriod(months, periodLength);
+}
+
+formatPeriod(months, periodLength) {
+  const m = parseFloat(months.toFixed(3));
+  const days = parseFloat((m * periodLength).toFixed(3));   // свои дни
+  const weeks = parseFloat((days / 7).toFixed(3));          // свои недели
+  const years = parseFloat((m / 12).toFixed(3));            // свои годы
+
+  return [
+    `${years} лет`,
+    `${m} месяцев`,
+    `${weeks} недель`,
+    `${days} дней`
+  ];
+}
+
 
   calculateSaros(date) {
     const parseDate = (dateStr) => {
