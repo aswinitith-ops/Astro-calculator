@@ -313,7 +313,7 @@ class DateCalculator {
     ];
   }
 
-  calculatePeriod(date1, date2, periodType) {
+ calculatePeriod(date1, date2, periodType) {
     const diffMs = Math.abs(new Date(date2) - new Date(date1));
     const diffDays = diffMs / (1000 * 60 * 60 * 24);
     let period;
@@ -330,14 +330,17 @@ class DateCalculator {
       default:
         period = diffDays;
     }
-    return this.formatPeriod(period);
+    return this.formatPeriod(period, periodType);
   }
 
-  formatPeriod(period) {
+  formatPeriod(period, periodType) {
     const years = Math.floor(period / 12);
     const months = parseFloat((period % 12).toFixed(3));
-    const weeks = parseFloat((period * this.config.siderealPeriod / 7).toFixed(3));
-    const days = parseFloat((period * this.config.siderealPeriod).toFixed(3));
+    const periodLength = periodType === 'sidereal' ? this.config.siderealPeriod :
+                        periodType === 'synodic' ? this.config.synodicPeriod :
+                        periodType === 'anomalistic' ? this.config.anomalisticPeriod : 1;
+    const weeks = parseFloat((period * periodLength / 7).toFixed(3));
+    const days = parseFloat((period * periodLength).toFixed(3));
     return [
       `${years} лет`,
       `${months} месяцев`,
@@ -346,68 +349,52 @@ class DateCalculator {
     ];
   }
 
-calculateSaros(date) {
-  // Парсинг даты для поддержки форматов DD.MM.YYYY и YYYY-MM-DD
-  const parseDate = (dateStr) => {
-    if (!dateStr) return null;
-    if (typeof dateStr === 'string' && dateStr.includes('.')) {
-      const [day, month, year] = dateStr.split('.');
-      return new Date(`${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`);
+  calculateSaros(date) {
+    const parseDate = (dateStr) => {
+      if (!dateStr) return null;
+      if (typeof dateStr === 'string' && dateStr.includes('.')) {
+        const [day, month, year] = dateStr.split('.');
+        return new Date(`${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`);
+      }
+      return new Date(dateStr);
+    };
+
+    const inputDate = parseDate(date);
+    if (!inputDate || isNaN(inputDate)) {
+      return 'Ошибка: введите полную дату';
     }
-    return new Date(dateStr);
-  };
+    const inputDateStr = inputDate.toISOString().split('T')[0];
 
-  const inputDate = parseDate(date);
-  if (!inputDate || isNaN(inputDate)) {
-    return 'Ошибка: введите полную дату';
-  }
-  const inputDateStr = inputDate.toISOString().split('T')[0]; // Формат YYYY-MM-DD
+    const eclipse = this.eclipseTable.find(e => e.date === inputDateStr);
+    if (eclipse) {
+      return `${eclipse.type}, Сарос №${eclipse.saros}`;
+    }
 
-  // Проверяем, есть ли затмение на введённую дату
-  const eclipse = this.eclipseTable.find(e => e.date === inputDateStr);
-  if (eclipse) {
-    return `${eclipse.type}, Сарос №${eclipse.saros}`;
-  }
-
-  // Вычисляем номер Сароса
-  const startDate = new Date('1900-01-01');
-  const diffMs = inputDate - startDate;
-  const diffDays = diffMs / (1000 * 60 * 60 * 24);
-  const sarosCycles = Math.floor(diffDays / this.config.sarosPeriod);
-  const sarosNumber = (sarosCycles % 223) + 1;
-
-  // Находим все затмения с этим номером Сароса
-  const sameSarosEclipses = this.eclipseTable.filter(e => e.saros === sarosNumber);
-  console.log(`Сарос №${sarosNumber}, Найденные затмения:`, sameSarosEclipses); // Отладка
-
-  if (sameSarosEclipses.length > 0) {
-    // Находим ближайшее затмение в цикле Сароса
-    const closestEclipse = sameSarosEclipses.reduce((closest, current) => {
+    const closestEclipse = this.eclipseTable.reduce((closest, current) => {
       const currentDiff = Math.abs(new Date(current.date) - inputDate);
       const closestDiff = Math.abs(new Date(closest.date) - inputDate);
       return currentDiff < closestDiff ? current : closest;
-    }, sameSarosEclipses[0]);
+    }, this.eclipseTable[0]);
 
     const closestDate = new Date(closestEclipse.date);
     const isFuture = closestDate > inputDate;
-    return `Затмения нет, ближайшее: ${closestDate.toLocaleDateString('ru-RU')}, ${closestEclipse.type}, Сарос №${sarosNumber}${isFuture ? ' (в будущем)' : ' (в прошлом)'}`;
+    return `Затмения нет, ближайшее: ${closestDate.toLocaleDateString('ru-RU')}, ${closestEclipse.type}, Сарос №${closestEclipse.saros}${isFuture ? ' (в будущем)' : ' (в прошлом)'}`;
   }
 
-  // Если затмений с этим Саросом нет, ищем ближайшее среди всех затмений
-  const closestEclipse = this.eclipseTable.reduce((closest, current) => {
-    const currentDiff = Math.abs(new Date(current.date) - inputDate);
-    const closestDiff = Math.abs(new Date(closest.date) - inputDate);
-    return currentDiff < closestDiff ? current : closest;
-  }, this.eclipseTable[0]);
-
-  const closestDate = new Date(closestEclipse.date);
-  const isFuture = closestDate > inputDate;
-  return `Затмения нет, ближайшее: ${closestDate.toLocaleDateString('ru-RU')}, ${closestEclipse.type}, Сарос №${closestEclipse.saros}${isFuture ? ' (в будущем)' : ' (в прошлом)'}`;
-}
-
   calculatePhase(date) {
+    const parseDate = (dateStr) => {
+      if (!dateStr) return null;
+      if (typeof dateStr === 'string' && dateStr.includes('.')) {
+        const [day, month, year] = dateStr.split('.');
+        return new Date(`${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`);
+      }
+      return new Date(dateStr);
+    };
+
+    const inputDate = parseDate(date);
+    if (!inputDate || isNaN(inputDate)) return 'Ошибка: неверный формат даты';
     const startDate = new Date('1923-01-01');
-    const diffMs = new Date(date) - startDate;
+    const diffMs = inputDate - startDate;
     const diffDays = diffMs / (1000 * 60 * 60 * 24);
     const phaseCycle = diffDays % this.config.synodicPeriod;
     const phasePercent = phaseCycle / this.config.synodicPeriod;
@@ -424,8 +411,21 @@ calculateSaros(date) {
   }
 
   calculateLunarMonth(date) {
+    const parseDate = (dateStr) => {
+      if (!dateStr) return null;
+      if (typeof dateStr === 'string' && dateStr.includes('.')) {
+        const [day, month, year] = dateStr.split('.');
+        return new Date(`${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`);
+      }
+      return new Date(dateStr);
+    };
+
+    const inputDate = parseDate(date);
+    if (!inputDate || isNaN(inputDate)) {
+      return 'Ошибка: введите полную дату';
+    }
     const startDate = new Date('1923-01-01');
-    const diffMs = new Date(date) - startDate;
+    const diffMs = inputDate - startDate;
     const diffDays = diffMs / (1000 * 60 * 60 * 24);
     const lunarMonths = Math.floor(diffDays / this.config.synodicPeriod);
     return `Порядковый номер лунного месяца: ${lunarMonths + 1}`;
